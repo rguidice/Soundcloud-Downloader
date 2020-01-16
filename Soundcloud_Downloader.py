@@ -11,7 +11,8 @@ import time
 
 if __name__ == "__main__":
     #initialization: get target song link from arguments, set downloader website and set download directory
-    song_link = 'https://soundcloud.com/user-915717052/brochampton-i-wonder-what-you-are-extended-version'
+    #song_link = 'https://soundcloud.com/user-915717052/brochampton-i-wonder-what-you-are-extended-version'
+    song_link = input("Please enter the soundcloud link: ")
     sc_download_website = 'https://sclouddownloader.net/'
     chrome_options = webdriver.ChromeOptions()
     music_direc = "D:\Ryan\Music"
@@ -28,7 +29,7 @@ if __name__ == "__main__":
         if fnmatch.fnmatch(entry, pattern):
             song_list_1.append(entry)
 
-    print(song_list_1)
+    #print(song_list_1)
 
     #open Chrome at downloader website
     driver.get(sc_download_website)
@@ -57,38 +58,38 @@ if __name__ == "__main__":
         if fnmatch.fnmatch(entry, pattern):
             song_list_2.append(entry)
 
-    print(song_list_2)
+    #print(song_list_2)
 
     downloaded_song = list(set(song_list_2) - set(song_list_1))
     downloaded_song = downloaded_song[0]
-    print(downloaded_song)
+    #print(downloaded_song)
 
     #download album art and song metadata
-    #driver = webdriver.Chrome(options=chrome_options)           # may be unnecessary?
     driver.get(song_link)
     image = driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[2]/div/div[2]/div/div[2]/div[1]/div/div/div/span").get_attribute("style")
     image = image.split("\"")
     imageurl = image[1]
-    print(imageurl)
+    #print(imageurl)
 
     song_data = driver.title
-    print(song_data)
+    #print(song_data)
     long_version = song_data.find("|")
-    print(long_version)
+    #print(long_version)
     if long_version == -1:
         song_data = song_data.split(" by ")
     else:
         song_data = song_data[0:len(song_data) - 31].split(" by ")
-    print(song_data)
+    #print(song_data)
     song_title = song_data[0]
     song_artist = song_data[1]
 
     print("Found Title: " + song_title)
     print("Found Artist: " + song_artist)
-    user_input = input("Are these accurate? (Y/N)")
+    user_input = input("Are these accurate? (Y/N): ")
     if user_input == "N" or user_input == "n" or user_input == "No" or user_input == "no":
-        song_title = input("Please enter the correct song title:")
-        song_artist = input("Please enter the correct artist:")
+        song_title = input("Please enter the correct song title: ")
+        song_artist = input("Please enter the correct artist: ")
+    song_album = input("Please enter the album name: ")
 
     image_direc = "D:\\Ryan\\Music\\Artwork\\" + song_artist + " - " + song_title + ".jpg"
 
@@ -97,10 +98,24 @@ if __name__ == "__main__":
 
     driver.close()
 
-    # #apply album art and song metadata
-    # song_directory = "D:\\Ryan\\Downloads\\" + downloaded_song
-    # song_file = eyed3.load(song_directory)
-    # song_file.tag.artist = u"Test Artist"
-    # song_file.tag.title = u"Test Title"
-    # song_file.tag.save()
+    #apply album art and song metadata
+    song_directory = "D:\\Ryan\\Downloads\\" + downloaded_song
+    song_file = eyed3.load(song_directory)
+    song_file.initTag()
+    song_file.tag.artist = song_artist
+    song_file.tag.title = song_title
+    song_file.tag.album = song_album
+    if "Single" in song_album or "single" in song_album:
+        song_file.tag.track_num = (1,1)
+    else:
+        song_track_num = input("Track number: ")
+        song_track_num_total = input("Total track number: ")
+        song_file.tag.track_num = (song_track_num,song_track_num_total)
+    image_data = open(image_direc,"rb").read()
+    song_file.tag.images.set(3, image_data,"image/jpeg")
+    song_file.tag.save()
 
+    # Since the experimental chrome prefs aren't working:
+    # Move song file to music directory
+    new_directory = "D:\\Ryan\\Music\\" + downloaded_song
+    os.rename(song_directory, new_directory)

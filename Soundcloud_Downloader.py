@@ -1,7 +1,6 @@
 #   Author: Ryan Guidice
-#   Description: Script to automate downloading soundcloud songs and importing them into iTunes
+#   Description: Script to automate downloading soundcloud songs and change song metadata for easy iTunes import.
 
-import sys
 import os
 from selenium import webdriver
 import requests
@@ -11,25 +10,23 @@ import time
 
 if __name__ == "__main__":
     #initialization: get target song link from arguments, set downloader website and set download directory
-    #song_link = 'https://soundcloud.com/user-915717052/brochampton-i-wonder-what-you-are-extended-version'
     song_link = input("Please enter the soundcloud link: ")
     sc_download_website = 'https://sclouddownloader.net/'
     chrome_options = webdriver.ChromeOptions()
     music_direc = "D:\Ryan\Music"
-    prefs = {'download.default_diretory':music_direc}
+    prefs = {'download.default_directory':music_direc}
     chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_argument("--mute-audio")
     driver = webdriver.Chrome(options=chrome_options)
 
     # Get initial list of songs
-    file_list = os.listdir("D:\\Ryan\\Downloads")
+    file_list = os.listdir("D:\\Ryan\\Music")
     pattern = "*.mp3"
     song_list_1 = []
 
     for entry in file_list:
         if fnmatch.fnmatch(entry, pattern):
             song_list_1.append(entry)
-
-    #print(song_list_1)
 
     #open Chrome at downloader website
     driver.get(sc_download_website)
@@ -39,18 +36,15 @@ if __name__ == "__main__":
     driver.find_element_by_name("sound-url").send_keys(song_link)
 
     #click convert button
-    #driver.find_element_by_xpath("/html/body/div/div[1]/div[1]/div[5]/div[1]/div[1]/form/button").click()
     driver.find_element_by_class_name("button").click()
 
     #delay for 2s to let webpage load, then click on the download icon
     time.sleep(2)
     driver.find_element_by_xpath("/html/body/div[2]/div[2]/div[1]/center/a[1]").click()
-    #driver.find_element_by_class_name("expanded button").click()
     time.sleep(10)
-    #driver.close()
 
     #detect downloaded file name
-    file_list = os.listdir("D:\\Ryan\\Downloads")
+    file_list = os.listdir("D:\\Ryan\\Music")
     pattern = "*.mp3"
     song_list_2 = []
 
@@ -58,28 +52,21 @@ if __name__ == "__main__":
         if fnmatch.fnmatch(entry, pattern):
             song_list_2.append(entry)
 
-    #print(song_list_2)
-
     downloaded_song = list(set(song_list_2) - set(song_list_1))
     downloaded_song = downloaded_song[0]
-    #print(downloaded_song)
 
     #download album art and song metadata
     driver.get(song_link)
     image = driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[2]/div/div[2]/div/div[2]/div[1]/div/div/div/span").get_attribute("style")
     image = image.split("\"")
     imageurl = image[1]
-    #print(imageurl)
 
     song_data = driver.title
-    #print(song_data)
     long_version = song_data.find("|")
-    #print(long_version)
     if long_version == -1:
         song_data = song_data.split(" by ")
     else:
         song_data = song_data[0:len(song_data) - 31].split(" by ")
-    #print(song_data)
     song_title = song_data[0]
     song_artist = song_data[1]
 
@@ -99,7 +86,7 @@ if __name__ == "__main__":
     driver.close()
 
     #apply album art and song metadata
-    song_directory = "D:\\Ryan\\Downloads\\" + downloaded_song
+    song_directory = "D:\\Ryan\\Music\\" + downloaded_song
     song_file = eyed3.load(song_directory)
     song_file.initTag()
     song_file.tag.artist = song_artist
@@ -115,7 +102,3 @@ if __name__ == "__main__":
     song_file.tag.images.set(3, image_data,"image/jpeg")
     song_file.tag.save()
 
-    # Since the experimental chrome prefs aren't working:
-    # Move song file to music directory
-    new_directory = "D:\\Ryan\\Music\\" + downloaded_song
-    os.rename(song_directory, new_directory)

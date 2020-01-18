@@ -1,6 +1,6 @@
 # Soundcloud-Downloader
 
-###Description: 
+### Description: 
 
 This python script is meant to automate the process I use for downloading songs from SoundCloud. This process could be much more streamlined through use of the SoundCloud API, but they unfortunately aren't giving out API keys at the moment. If they become available, I would like to give this project another glance, as avoiding selenium and sending requests directly through their API would make this script much more efficient. On the topic of efficiency, this script could certainly be improved without the use of the SoundCloud API, and I will be working on improving it in the future.
 

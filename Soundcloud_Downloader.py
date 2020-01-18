@@ -9,7 +9,7 @@ import fnmatch
 import time
 
 if __name__ == "__main__":
-    #initialization: get target song link from arguments, set downloader website and set download directory
+    # Initialization: get target song link from user input, set downloader website and set download directory
     song_link = input("Please enter the soundcloud link: ")
     sc_download_website = 'https://sclouddownloader.net/'
     chrome_options = webdriver.ChromeOptions()
@@ -17,6 +17,8 @@ if __name__ == "__main__":
     prefs = {'download.default_directory':music_direc}
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument("--mute-audio")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("log-level=3")
     driver = webdriver.Chrome(options=chrome_options)
 
     # Get initial list of songs
@@ -28,22 +30,22 @@ if __name__ == "__main__":
         if fnmatch.fnmatch(entry, pattern):
             song_list_1.append(entry)
 
-    #open Chrome at downloader website
+    # Open Chrome at downloader website
     driver.get(sc_download_website)
 
-    #find and click the video url textbox, then enter in link
+    # Find and click the video url textbox, then enter in link
     driver.find_element_by_name("sound-url").click()
     driver.find_element_by_name("sound-url").send_keys(song_link)
 
-    #click convert button
+    # Click convert button
     driver.find_element_by_class_name("button").click()
 
-    #delay for 2s to let webpage load, then click on the download icon
+    # Delay to let webpage load, then click on the download icon and delay to let file download
     time.sleep(2)
-    driver.find_element_by_xpath("/html/body/div[2]/div[2]/div[1]/center/a[1]").click()
+    driver.find_element_by_css_selector(".expanded.button").click()
     time.sleep(10)
 
-    #detect downloaded file name
+    # Detect downloaded file name
     file_list = os.listdir("D:\\Ryan\\Music")
     pattern = "*.mp3"
     song_list_2 = []
@@ -55,11 +57,11 @@ if __name__ == "__main__":
     downloaded_song = list(set(song_list_2) - set(song_list_1))
     downloaded_song = downloaded_song[0]
 
-    #download album art and song metadata
+    # Download album art and song metadata
     driver.get(song_link)
     image = driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[2]/div/div[2]/div/div[2]/div[1]/div/div/div/span").get_attribute("style")
     image = image.split("\"")
-    imageurl = image[1]
+    image_url = image[1]
 
     song_data = driver.title
     long_version = song_data.find("|")
@@ -81,11 +83,11 @@ if __name__ == "__main__":
     image_direc = "D:\\Ryan\\Music\\Artwork\\" + song_artist + " - " + song_title + ".jpg"
 
     with open(image_direc, "wb") as f:
-        f.write(requests.get(imageurl).content)
+        f.write(requests.get(image_url).content)
 
     driver.close()
 
-    #apply album art and song metadata
+    # Apply album art and song metadata
     song_directory = "D:\\Ryan\\Music\\" + downloaded_song
     song_file = eyed3.load(song_directory)
     song_file.initTag()

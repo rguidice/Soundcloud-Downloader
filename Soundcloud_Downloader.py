@@ -9,11 +9,11 @@ import time
 
 if __name__ == "__main__":
     # Initialization: get target song link from user input, set downloader website and set download directory
-    song_link = input("Please enter the soundcloud link: ")
+    song_link = input("Please enter the SoundCloud link: ")
     sc_download_website = "https://sclouddownloader.net/"
     chrome_options = webdriver.ChromeOptions()
-    music_direc = "D:\\Ryan\\Music"
-    prefs = {"download.default_directory":music_direc}
+    music_directory = "D:\\Ryan\\Music"
+    prefs = {"download.default_directory": music_directory}
     chrome_options.add_experimental_option("prefs", prefs)
     chrome_options.add_argument("--mute-audio")
     chrome_options.add_argument("--headless")
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     driver.find_element_by_css_selector(".expanded.button").click()
     time.sleep(10)
 
-    downloaded_song = max([music_direc + "\\" + f for f in os.listdir(music_direc)], key=os.path.getctime)
+    downloaded_song = max([music_directory + "\\" + f for f in os.listdir(music_directory)], key=os.path.getctime)
 
     # Download album art and song metadata
     driver.get(song_link)
@@ -55,14 +55,14 @@ if __name__ == "__main__":
     print("Found Title: " + song_title)
     print("Found Artist: " + song_artist)
     user_input = input("Are these accurate? (Y/N): ")
-    if user_input == "N" or user_input == "n" or user_input == "No" or user_input == "no":
+    if user_input.lower() == "n" or user_input.lower() == "no":
         song_title = input("Please enter the correct song title: ")
         song_artist = input("Please enter the correct artist: ")
     song_album = input("Please enter the album name: ")
 
-    image_direc = "D:\\Ryan\\Music\\Artwork\\" + song_artist + " - " + song_title + ".jpg"
+    image_directory = music_directory + "\\Artwork\\" + song_artist + " - " + song_title + ".jpg"
 
-    with open(image_direc, "wb") as f:
+    with open(image_directory, "wb") as f:
         f.write(requests.get(image_url).content)
 
     driver.close()
@@ -74,13 +74,13 @@ if __name__ == "__main__":
     song_file.tag.artist = song_artist
     song_file.tag.title = song_title
     song_file.tag.album = song_album
-    if "Single" in song_album or "single" in song_album:
-        song_file.tag.track_num = (1,1)
+    if "single" in song_album.lower():
+        song_file.tag.track_num = (1, 1)
     else:
         song_track_num = input("Track number: ")
         song_track_num_total = input("Total track number: ")
-        song_file.tag.track_num = (song_track_num,song_track_num_total)
-    image_data = open(image_direc,"rb").read()
-    song_file.tag.images.set(3, image_data,"image/jpeg")
+        song_file.tag.track_num = (song_track_num, song_track_num_total)
+    image_data = open(image_directory, "rb").read()
+    song_file.tag.images.set(3, image_data, "image/jpeg")
     song_file.tag.save()
 

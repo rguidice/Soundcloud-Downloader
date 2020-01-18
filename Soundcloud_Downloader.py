@@ -5,30 +5,20 @@ import os
 from selenium import webdriver
 import requests
 import eyed3
-import fnmatch
 import time
 
 if __name__ == "__main__":
     # Initialization: get target song link from user input, set downloader website and set download directory
     song_link = input("Please enter the soundcloud link: ")
-    sc_download_website = 'https://sclouddownloader.net/'
+    sc_download_website = "https://sclouddownloader.net/"
     chrome_options = webdriver.ChromeOptions()
-    music_direc = "D:\Ryan\Music"
-    prefs = {'download.default_directory':music_direc}
-    chrome_options.add_experimental_option('prefs', prefs)
+    music_direc = "D:\\Ryan\\Music"
+    prefs = {"download.default_directory":music_direc}
+    chrome_options.add_experimental_option("prefs", prefs)
     chrome_options.add_argument("--mute-audio")
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("log-level=3")
     driver = webdriver.Chrome(options=chrome_options)
-
-    # Get initial list of songs
-    file_list = os.listdir("D:\\Ryan\\Music")
-    pattern = "*.mp3"
-    song_list_1 = []
-
-    for entry in file_list:
-        if fnmatch.fnmatch(entry, pattern):
-            song_list_1.append(entry)
 
     # Open Chrome at downloader website
     driver.get(sc_download_website)
@@ -45,17 +35,7 @@ if __name__ == "__main__":
     driver.find_element_by_css_selector(".expanded.button").click()
     time.sleep(10)
 
-    # Detect downloaded file name
-    file_list = os.listdir("D:\\Ryan\\Music")
-    pattern = "*.mp3"
-    song_list_2 = []
-
-    for entry in file_list:
-        if fnmatch.fnmatch(entry, pattern):
-            song_list_2.append(entry)
-
-    downloaded_song = list(set(song_list_2) - set(song_list_1))
-    downloaded_song = downloaded_song[0]
+    downloaded_song = max([music_direc + "\\" + f for f in os.listdir(music_direc)], key=os.path.getctime)
 
     # Download album art and song metadata
     driver.get(song_link)
@@ -88,7 +68,7 @@ if __name__ == "__main__":
     driver.close()
 
     # Apply album art and song metadata
-    song_directory = "D:\\Ryan\\Music\\" + downloaded_song
+    song_directory = downloaded_song
     song_file = eyed3.load(song_directory)
     song_file.initTag()
     song_file.tag.artist = song_artist
